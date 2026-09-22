@@ -1,0 +1,8 @@
+interface:
+  display_name: "月明·社媒图文发布"
+  short_description: "小红书图文、抖音图文/长文与 X 线程的准备、授权发布和核验"
+  brand_color: "#39EC88"
+  default_prompt: "使用 $moonlit-social-publisher 准备并核验小红书图文、抖音图文或长文与 X 线程发布包。"
+
+policy:
+  allow_implicit_invocation: true
