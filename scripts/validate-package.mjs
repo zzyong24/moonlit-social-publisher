@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -15,11 +16,13 @@ const packageDir = path.dirname(absolutePackagePath);
 const raw = fs.readFileSync(absolutePackagePath, 'utf8');
 const data = JSON.parse(raw);
 const errors = [];
+const reviewFiles = [absolutePackagePath];
 
 const chars = (value) => Array.from(value ?? '').length;
 const hasCjk = (value) => /[\u3400-\u9fff\uf900-\ufaff]/u.test(value ?? '');
 const resolveAsset = (value) => path.isAbsolute(value) ? value : path.resolve(packageDir, value);
 const requireAsset = (value, label) => {
+  if (typeof value === 'string' && value.trim()) reviewFiles.push(resolveAsset(value));
   if (typeof value !== 'string' || !value.trim()) {
     errors.push(`${label}: missing path`);
     return;
@@ -200,4 +203,28 @@ if (errors.length) {
 }
 
 const fingerprint = crypto.createHash('sha256').update(raw).digest('hex');
-console.log(JSON.stringify({status: 'READY', workId: data.workId, fingerprint}, null, 2));
+const requireReview = process.argv.includes('--require-review');
+if (requireReview) {
+  const gate = process.env.MOONLIT_GUOSHEN_GATE;
+  const receipt = process.env.MOONLIT_GUOSHEN_RECEIPT;
+  const guoshenDir = process.env.MOONLIT_GUOSHEN_DIR;
+  if (!gate || !receipt || !guoshenDir) {
+    console.error('guoshen gate/receipt/dir required before READY or upload');
+    process.exit(2);
+  }
+  const platforms = [...new Set([
+    ...(xhs?.enabled ? ['xiaohongshu'] : []),
+    ...(douyinGraphic?.enabled || douyinArticle?.enabled ? ['douyin'] : []),
+    ...(x?.enabled ? ['x'] : []),
+  ])];
+  const checked = spawnSync(process.env.MOONLIT_PYTHON || 'python3', [gate,
+    '--receipt', receipt, '--guoshen-dir', guoshenDir,
+    ...platforms.flatMap(platform => ['--platform', platform]),
+    ...[...new Set(reviewFiles)].flatMap(file => ['--file', file]),
+  ], {encoding: 'utf8'});
+  if (checked.status !== 0) {
+    console.error(checked.stderr || checked.stdout || String(checked.error || 'guoshen preflight failed'));
+    process.exit(2);
+  }
+}
+console.log(JSON.stringify({status: requireReview ? 'READY' : 'VALIDATED', riskReview: requireReview ? 'passed' : 'not_checked', workId: data.workId, fingerprint}, null, 2));

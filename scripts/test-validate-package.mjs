@@ -83,8 +83,16 @@ try {
 
   const validPath = path.join(tempDir, 'valid.json');
   fs.writeFileSync(validPath, JSON.stringify(valid));
+  const missingReviewEnv = {...process.env};
+  delete missingReviewEnv.MOONLIT_GUOSHEN_GATE;
+  delete missingReviewEnv.MOONLIT_GUOSHEN_DIR;
+  delete missingReviewEnv.MOONLIT_GUOSHEN_RECEIPT;
+  const noReview = spawnSync(process.execPath, [validator, validPath, '--require-review'], {encoding:'utf8', env:missingReviewEnv});
+  if (noReview.status === 0 || !noReview.stderr.includes('guoshen')) {
+    throw new Error('missing guoshen review must block READY');
+  }
   const validRun = spawnSync(process.execPath, [validator, validPath], {encoding: 'utf8'});
-  if (validRun.status !== 0 || !validRun.stdout.includes('"status": "READY"')) {
+  if (validRun.status !== 0 || !validRun.stdout.includes('"status": "VALIDATED"')) {
     throw new Error(`valid package failed: ${validRun.stderr || validRun.stdout}`);
   }
 
@@ -94,7 +102,7 @@ try {
   validCarousel.platforms.xiaohongshu.images = images;
   fs.writeFileSync(validCarouselPath, JSON.stringify(validCarousel));
   const validCarouselRun = spawnSync(process.execPath, [validator, validCarouselPath], {encoding: 'utf8'});
-  if (validCarouselRun.status !== 0 || !validCarouselRun.stdout.includes('"status": "READY"')) {
+  if (validCarouselRun.status !== 0 || !validCarouselRun.stdout.includes('"status": "VALIDATED"')) {
     throw new Error(`valid carousel package failed: ${validCarouselRun.stderr || validCarouselRun.stdout}`);
   }
 

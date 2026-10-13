@@ -7,12 +7,20 @@ description: Prepare, validate, and—after explicit current-run authorization�
 
 Publish one confirmed content package to Xiaohongshu graphic notes, Douyin image posts or long-form articles, and/or X threads. Keep content generation separate from live platform operations: receive Xiaohongshu copy, image mode, and ordered images from `moonlit-xiaohongshu`; receive Douyin source copy and ordered images from the confirmed canonical article or graphic package; receive X post segments from `moonlit-x-short`.
 
+## 发布前必需审核
+
+内容进入发布准备，先按名称解析当前激活 `moonlit-content-engine`，读取其 `references/publish-review.md`，并实际运行依赖 `guoshen`。通读正文或独立语音/字幕及全画面，审核目标平台的当前规则、封面、渠道文案和发布设置；完成报告与版本绑定回执，通过共享门禁才上传、进入READY或最终提交。修复、换平台、文案/媒体/设置变化后重审；审核缺失、未完成或不通过不能继续外发。手工浏览器路径、续发、恢复和直接CLI也遵守同一门禁；本地排版/只读检查可先执行。上游不支持的公众号、X等按合同补充对应平台审核，不能套用视频号结论。
+
+执行发布命令前，按激活目录设置 `MOONLIT_GUOSHEN_GATE`、`MOONLIT_GUOSHEN_DIR`、`MOONLIT_GUOSHEN_RECEIPT`。共享门禁只验证回执，不能替代实际语义审核；通过也不代替本次发布授权。
+
 ## Required inputs
 
 Require a package matching [references/package-schema.md](references/package-schema.md). Resolve every image path and validate the package before opening a creator page:
 
 ```bash
 node scripts/validate-package.mjs /absolute/path/to/social-publish-package.json
+# After actual guoshen review, before any upload or final publication:
+node scripts/validate-package.mjs /absolute/path/to/social-publish-package.json --require-review
 ```
 
 Never store cookies, credentials, browser profiles, login state, or final-publish authorization in the package or Skill repository.
@@ -20,7 +28,7 @@ Never store cookies, credentials, browser profiles, login state, or final-publis
 ## Two-phase workflow
 
 1. Read the confirmed source copy and ordered assets from the canonical work directory.
-2. Validate the package and freeze its fingerprint.
+2. Validate the package and freeze its fingerprint. Execute guoshen under the required review contract, then call the shared gate with the package JSON, canonical source copy and every actual image/media input before any upload. Re-run the gate before final publication; do not call local package validation a risk-review READY result.
 3. Read and follow [references/browser-operation-contract.md](references/browser-operation-contract.md). Reuse one stable Ego Lite task space per platform/account and inspect current page state before mutation.
 4. Upload assets and fill every field. Re-read title, body/post order, media order, declarations, and visibility.
 5. Stop at `READY` unless the user explicitly authorizes final publication in the current run.
