@@ -69,7 +69,7 @@ Use one immutable JSON package for one work. Omit a platform or set `enabled: fa
 
 Rules:
 
-- Do not add a `publishAuthorized` field. Authorization exists only in the current conversation/run.
+- Do not add a `publishAuthorized` field. Approval lives only in the per-item `approval.json` next to the work (see per-item-approval.md), never in the package.
 - For Moonlit Xiaohongshu graphic packages, default to `imageMode: single_cover` with exactly 1 image. Use `carousel` with 2–18 ordered images only when every additional image carries independent information. Require 5–8 topics in either mode.
 - Set `originalityPolicy` to `all_content_original`, `not_original`, or `ask_each_run`; the first is a truthful standing policy, not publish authorization.
 - Use `笔记含AI合成内容` when any published visual or substantive content is AI-generated or AI-composited.
@@ -79,3 +79,9 @@ Rules:
 - For X, use `mode: thread`; one post is allowed only when the content skill explicitly selected short mode.
 - Attach no more than 4 media items to one X post. Keep media paths attached to their intended post rather than in one global pool.
 - Freeze the package after draft preparation. Any content or asset change creates a new fingerprint and requires revalidation.
+
+## X Articles与分发合同
+
+当前多平台编排必须附 `distributionContract`，每个平台记录 `format` 和 `coverKind`。小红书图文适配器只接受 `xiaohongshu.format: graphic`；若合同是video必须交视频发布器。X的format必须与mode相同，article封面类型必须为non_portrait。此合同只描述采用的内容形式，不保存发布授权。
+
+X文章使用 `platforms.x: {enabled: true, mode: article, title, body, contentSource, sourceSha256, coverImage, coverKind: non_portrait, inlineImages: [], visibility: public}`。contentSource与全部媒体为实际文件路径，sourceSha256绑定源稿；不得包含posts。validator检查文件/源hash/声明的形式；实际图片身份和原生编辑器仍须视觉核验。thread/short仅用于用户明确指定的例外，不是Articles缺权限的后备。

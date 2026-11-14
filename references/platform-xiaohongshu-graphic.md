@@ -27,10 +27,10 @@ Require all of the following:
 - exact committed topics or a recorded platform limitation;
 - intended declarations and visibility;
 - visible enabled final `发布` control;
-- final publication not clicked without current-run authorization.
+- final publication not clicked without 月明's per-item approval (see per-item-approval.md).
 
 ## Publish and verify
 
-After authorization, click the exact enabled `发布` control once. Accept success only when the page reports `发布成功`. Then open 笔记管理 and match the exact title plus image-note identity. Record `submitted` while the list says `审核中`; promote to `published` only after public visibility is confirmed.
+After 月明 approves this specific item and `check-approval.mjs` passes, click the exact enabled `发布` control once. Accept success only when the page reports `发布成功`. Then open 笔记管理 and match the exact title plus image-note identity. Record `submitted` while the list says `审核中`; promote to `published` only after public visibility is confirmed.
 
 This flow was live-tested on 2026-09-07 with a 9-image carousel. Single-cover mode uses the same image-note editor but must still be verified in the current run.

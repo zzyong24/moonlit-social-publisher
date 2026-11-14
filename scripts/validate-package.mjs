@@ -176,8 +176,21 @@ if (douyinArticle?.enabled) {
 
 const x = data.platforms?.x;
 if (x?.enabled) {
-  if (!['thread', 'short'].includes(x.mode)) errors.push('x.mode must be thread or short');
-  if (!Array.isArray(x.posts) || x.posts.length < 1) {
+  if (!['article', 'thread', 'short'].includes(x.mode)) errors.push('x.mode must be article, thread or short');
+  if (x.mode === 'article') {
+    if (!x.title?.trim()) errors.push('x article title is required');
+    if (!x.body?.trim()) errors.push('x article body is required');
+    if (Object.hasOwn(x, 'posts')) errors.push('x article must not contain posts; use native Articles');
+    if (x.coverKind !== 'non_portrait') errors.push('x article coverKind must be non_portrait');
+    requireAsset(x.coverImage, 'x.coverImage');
+    requireAsset(x.contentSource, 'x.contentSource');
+    if (typeof x.contentSource === 'string' && fs.existsSync(resolveAsset(x.contentSource))) {
+      const actual = crypto.createHash('sha256').update(fs.readFileSync(resolveAsset(x.contentSource))).digest('hex');
+      if (actual !== x.sourceSha256) errors.push('x.contentSource SHA-256 does not match sourceSha256');
+    }
+    if (!Array.isArray(x.inlineImages)) errors.push('x.inlineImages must be an array');
+    else x.inlineImages.forEach((asset, index) => requireAsset(asset, `x.inlineImages[${index}]`));
+  } else if (!Array.isArray(x.posts) || x.posts.length < 1) {
     errors.push('x.posts must contain at least one post');
   } else {
     if (x.mode === 'thread' && x.posts.length < 2) errors.push('x thread mode requires at least 2 posts');
@@ -195,6 +208,14 @@ if (x?.enabled) {
 }
 
 if (!xhs?.enabled && !douyinGraphic?.enabled && !douyinArticle?.enabled && !x?.enabled) errors.push('at least one platform must be enabled');
+// Optional for legacy explicit-format packages; current multi-platform orchestration
+// must supply this frozen intent independently of the adapter's inferred shape.
+if (data.distributionContract) {
+  const contract = data.distributionContract;
+  if (xhs?.enabled && contract.xiaohongshu?.format !== 'graphic') errors.push('xiaohongshu graphic adapter conflicts with distributionContract');
+  if (x?.enabled && contract.x?.format !== x.mode) errors.push('x.mode conflicts with distributionContract');
+  if (x?.enabled && x.mode === 'article' && contract.x?.coverKind !== 'non_portrait') errors.push('x article cover conflicts with distributionContract');
+}
 if (Object.hasOwn(data, 'publishAuthorized')) errors.push('publishAuthorized must never be persisted in the package');
 
 if (errors.length) {
@@ -217,7 +238,7 @@ if (requireReview) {
     ...(douyinGraphic?.enabled || douyinArticle?.enabled ? ['douyin'] : []),
     ...(x?.enabled ? ['x'] : []),
   ])];
-  const checked = spawnSync(process.env.MOONLIT_PYTHON || 'python3', [gate,
+  const checked = spawnSync(process.env.MOONLIT_PYTHON || 'python3', [gate, '--require-chain-version', '2',
     '--receipt', receipt, '--guoshen-dir', guoshenDir,
     ...platforms.flatMap(platform => ['--platform', platform]),
     ...[...new Set(reviewFiles)].flatMap(file => ['--file', file]),

@@ -27,6 +27,6 @@ Use the native `发布文章` flow and record it as `channel: douyin`, `format: 
 
 - Re-read the title, summary, body character count, inline-media count/order, header image, cover, topics, visibility, and timing from fresh page state.
 - Inspect both editor and preview. Confirm at least one native heading for a multi-section article, reasonable paragraph density, intentional emphasis, and no doubled bullet markers or accidental one-sentence paragraph cascade.
-- Stop at the exact enabled final `发布` control and request current-run confirmation.
-- After authorization, click once. Verify in 内容管理 by matching the exact title and article identity. Record review as `submitted`; use `published` only after the platform reports public/已发布.
+- Stop at the exact enabled final `发布` control and show 月明 the final preview and request explicit approval for this item.
+- After 月明 approves this specific item and `check-approval.mjs` passes, click once. Verify in 内容管理 by matching the exact title and article identity. Record review as `submitted`; use `published` only after the platform reports public/已发布.
 - Before retrying, inspect content management for the exact article identity to prevent duplicates.

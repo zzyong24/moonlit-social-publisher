@@ -5,6 +5,7 @@ Use this contract for every Moonlit social-publishing browser run. Platform refe
 ## Stable task-space identity
 
 - Reuse one stable Ego Lite task space per platform/account. Persist and resume the numeric task-space id for follow-ups on the same publishing chain.
+- 账号按 Ego Profile 隔离（月明 2026-10-21）：默认发大号；只有月明明确说「小号」才用小号，且只能发抖音/小红书，其他平台直接报错停下。按 `~/.config/video-publisher/accounts.json`（账号 → `egoProfileId` → 平台 → 昵称/ID，见 moonlit-video-publisher `references/account-profiles.md`）选 Profile：复用 Space 前用 `listTaskSpaces()` 核对它的 `profileId`，不一致就停；新建只用 `taskSpace(name, { profileId })`。最终预览写明「将发到：大号/小号 · 昵称 · ID」并附账号页头截图；点发布前 15 秒内再读一次页头昵称和账号 ID，对不上就停。
 - At the beginning of every browser round, explicitly select the recorded task space, list its tabs, and switch to the exact target tab. Never rely on the previously active tab.
 - A platform popup, crop dialog, or file chooser is page state, not proof that the user took control. Treat only Ego's explicit ownership error as a control handoff.
 - Keep the platform task space available for reuse when the user has requested a persistent publishing page. Close obsolete scratch tabs and abandoned wrong-format drafts so the next run has one unambiguous target.
@@ -43,7 +44,7 @@ Use semantic locators and visible text first. Generated class names and absolute
 ## Final gate and recovery
 
 - Re-read the frozen package and confirm its fingerprint before the final control.
-- Identify the exact enabled final publish control from fresh page state. Stop at `READY` without current-run authorization.
+- Identify the exact enabled final publish control from fresh page state. Stop at `READY` without 月明's per-item approval (see per-item-approval.md).
 - Before any retry, inspect the platform management/profile view for the exact content identity. Existing matching content blocks resubmission.
 - A changed title, body, asset set, or rich-text plan creates a new package fingerprint and requires a fresh `READY` verification.
 - Persist verification evidence and platform state as `draft`, `ready`, `submitted`, or `published`; review/审核中 is always `submitted`.

@@ -91,6 +91,11 @@ try {
   if (noReview.status === 0 || !noReview.stderr.includes('guoshen')) {
     throw new Error('missing guoshen review must block READY');
   }
+  const legacyGate = path.join(tempDir, 'legacy-gate.py');
+  fs.writeFileSync(legacyGate, 'import sys\nif "--require-chain-version" in sys.argv: sys.exit("legacy gate rejects unknown chain version")\nprint("old unversioned pass")\n');
+  const oldGateRun = spawnSync(process.execPath, [validator, validPath, '--require-review'], {encoding:'utf8', env:{...missingReviewEnv,
+    MOONLIT_GUOSHEN_GATE:legacyGate, MOONLIT_GUOSHEN_DIR:tempDir, MOONLIT_GUOSHEN_RECEIPT:validPath}});
+  if (oldGateRun.status === 0 || !oldGateRun.stderr.includes('legacy gate rejects')) throw new Error('old gate must not bypass three reviews');
   const validRun = spawnSync(process.execPath, [validator, validPath], {encoding: 'utf8'});
   if (validRun.status !== 0 || !validRun.stdout.includes('"status": "VALIDATED"')) {
     throw new Error(`valid package failed: ${validRun.stderr || validRun.stdout}`);
@@ -151,6 +156,29 @@ try {
     throw new Error(`unsafe package was not rejected: ${invalidRun.stderr || invalidRun.stdout}`);
   }
 
+  const articlePackage = {
+    schemaVersion: 1, workId: valid.workId,
+    distributionContract: {x: {format: 'article', coverKind: 'non_portrait'}},
+    platforms: {x: {enabled: true, mode: 'article', title: '完整文章', body: '完整论证。',
+      contentSource: article, sourceSha256: valid.platforms.douyinArticle.sourceSha256,
+      coverImage: images[0], coverKind: 'non_portrait', inlineImages: [images[1]], visibility: 'public'}}
+  };
+  function checkFormat(pkg, expected, message) {
+    const f = path.join(tempDir, 'format-case.json'); fs.writeFileSync(f, JSON.stringify(pkg));
+    const result = spawnSync(process.execPath, [validator, f], {encoding: 'utf8'});
+    if ((result.status === 0) !== expected || (!expected && !result.stderr.includes(message))) {
+      throw new Error(`format routing regression: ${result.stderr || result.stdout}`);
+    }
+  }
+  checkFormat(articlePackage, true);
+  const wrongX = structuredClone(valid); wrongX.distributionContract = {xiaohongshu: {format: 'graphic'}, x: {format: 'article'}};
+  checkFormat(wrongX, false, 'x.mode conflicts');
+  const wrongXhs = structuredClone(valid); wrongXhs.distributionContract = {xiaohongshu: {format: 'video'}, x: {format: wrongXhs.platforms.x.mode}};
+  checkFormat(wrongXhs, false, 'xiaohongshu graphic adapter conflicts');
+  const portraitArticle = structuredClone(articlePackage); portraitArticle.platforms.x.coverKind = 'portrait';
+  checkFormat(portraitArticle, false, 'coverKind must be non_portrait');
+  const splitArticle = structuredClone(articlePackage); splitArticle.platforms.x.posts = valid.platforms.x.posts;
+  checkFormat(splitArticle, false, 'must not contain posts');
   console.log('social publish package validation tests passed');
 } finally {
   fs.rmSync(tempDir, {recursive: true, force: true});

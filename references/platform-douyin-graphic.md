@@ -21,8 +21,8 @@ Use the Douyin creator center's native `发布图文` flow. Keep it separate fro
 
 - Set visibility, originality, AI-content, and other declarations independently and truthfully when the live editor exposes them.
 - Verify title, body, topics, image count/order, cover, visibility, and declarations from fresh page state.
-- Stop at the exact enabled final `发布` control. A general request to add platform support is not final-click authorization; request one current-run confirmation after reporting the prepared values.
-- After authorization, click the exact final control once. Verify success in 内容管理 by matching title and graphic-post identity. Record `submitted` while under review and `published` only when public/已发布 is confirmed.
+- Stop at the exact enabled final `发布` control. A general request to add platform support is not final-click authorization; request 月明's explicit approval for this item after showing the prepared values.
+- After 月明 approves this specific item and `check-approval.mjs` passes, click the exact final control once. Verify success in 内容管理 by matching title and graphic-post identity. Record `submitted` while under review and `published` only when public/已发布 is confirmed.
 
 ## Recovery
 

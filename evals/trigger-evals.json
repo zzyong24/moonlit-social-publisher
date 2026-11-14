@@ -1,0 +1,20 @@
+[
+ {
+  "skill": "moonlit-social-publisher",
+  "query": "把这篇小红书图文发出去",
+  "should_trigger": true,
+  "expected": "准备到 READY，给月明看预览，批准这一条后发布并回报链接"
+ },
+ {
+  "skill": "moonlit-social-publisher",
+  "query": "同步到 X 发成线程",
+  "should_trigger": true,
+  "expected": "原生线程编辑器准备，逐条批准后 Post all"
+ },
+ {
+  "skill": "moonlit-social-publisher",
+  "query": "发视频到B站",
+  "should_trigger": false,
+  "expected": "路由到 moonlit-video-publisher"
+ }
+]
